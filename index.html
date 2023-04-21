@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Markdown Editor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.1/styles/atom-one-dark.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked@0.7.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.1/highlight.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <div id="title">
+            <input id="title-input" type="text" placeholder="请输入标题" maxlength="50">
+        </div>
+        <div id="toolbar">
+            <button id="insert-image-btn"><i class="fas fa-image"></i></button>
+        </div>
+        <div id="editor-container">
+            <div id="editor" contenteditable="plaintext-only"></div>
+        </div>
+        <div id="preview"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
