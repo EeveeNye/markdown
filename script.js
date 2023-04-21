@@ -94,22 +94,12 @@ function renderCodeBlock() {
 
 // 在 editor 的 input 事件监听器中调用 renderCodeBlock 函数
 editor.addEventListener('input', () => {
-    const markdown = editor.innerText;
-    const html = marked(markdown);
-    const title = titleInput.value;
-    const titleHtml = title ? `<h1>${title}</h1>` : '';
-    preview.innerHTML = `${titleHtml}${html}`;
-    renderCodeBlock();
+    reRenderCodeBlock();
 });
 
 // 在 titleInput 的 input 事件监听器中调用 renderCodeBlock 函数
 titleInput.addEventListener('input', () => {
-    const title = titleInput.value;
-    const titleHtml = title ? `<h1>${title}</h1>` : '';
-    const markdown = editor.innerText;
-    const html = marked(markdown);
-    preview.innerHTML = `${titleHtml}${html}`;
-    renderCodeBlock();
+    reRenderCodeBlock();
 });
 
 document.addEventListener('click', (event) => {
@@ -253,58 +243,79 @@ function showContextMenu(event) {
     menu.style.left = event.clientX + 'px';
 }
 const contextMenu = document.getElementById('context-menu');
-const boldMenuItem = document.getElementById('bold');
+
 editor.addEventListener('contextmenu', (event) => {
     event.preventDefault();
 
-    const selection = window.getSelection();
-    const node = selection.focusNode;
+    contextMenu.style.display = 'block';
+    contextMenu.style.left = `${event.pageX}px`;
+    contextMenu.style.top = `${event.pageY}px`;
+});
 
-    if (node.nodeType === Node.TEXT_NODE) {
-        const range = selection.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-
-        contextMenu.style.display = 'block';
-        contextMenu.style.left = `${rect.x}px`;
-        contextMenu.style.top = `${rect.y}px`;
+document.addEventListener('click', (event) => {
+    if (event.target !== editor && event.target !== contextMenu) {
+        contextMenu.style.display = 'none';
     }
 });
 
-boldMenuItem.addEventListener('click', () => {
-    document.execCommand('bold', false, null);
-    contextMenu.style.display = 'none';
-});
+
 
 // 加粗
 document.getElementById('bold').addEventListener('click', () => {
-    document.execCommand('bold', false, null);
     formatSelectedText('**', '**');
 });
 
 // 斜体
 document.getElementById('italic').addEventListener('click', () => {
-    document.execCommand('italic', false, null);
     formatSelectedText('_', '_');
 });
 
 // 下划线
 document.getElementById('underline').addEventListener('click', () => {
-    document.execCommand('underline', false, null);
     formatSelectedText('<u>', '</u>');
 });
 
-// // 删除线
-// document.getElementById('strikethrough').addEventListener('click', () => {
-//     document.execCommand('strikethrough', false, null);
-//     formatSelectedText('~~', '~~');
-// });
-
+// 删除线
+document.getElementById('strikethrough').addEventListener('click', () => {
+    formatSelectedText('~~', '~~');
+});
+var selection, range, selectedText;
+editor.addEventListener("mouseup", function () {
+    selection = window.getSelection();
+    if (selection.toString().length > 0) {
+        range = selection.getRangeAt(0);
+        selectedText = range.toString();
+        console.log(selectedText);
+    }
+});
 function formatSelectedText(leftSymbol, rightSymbol) {
-    const editor = document.getElementById('editor');
-    const selection = window.getSelection();
-    const start = selection.anchorOffset;
-    const end = selection.focusOffset;
-    const text = editor.textContent.substring(start, end);
-    const formattedText = `${leftSymbol}${text}${rightSymbol}`;
-    document.execCommand('insertHTML', false, formattedText);
+    if (selectedText.length > 0) {
+        const formattedText = `${leftSymbol}${selectedText}${rightSymbol}`;
+        var newNode = document.createTextNode(formattedText);
+        range.deleteContents();
+        range.insertNode(newNode);
+        range.setStart(newNode, 0);
+        range.setEnd(newNode, newNode.length);
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        reRenderCodeBlock();
+    }
+    contextMenu.style.display = "none";
+
 }
+
+function reRenderCodeBlock() {
+    const markdown = editor.innerText;
+    const html = marked(markdown);
+    const title = titleInput.value;
+    const titleHtml = title ? `<h1>${title}</h1>` : '';
+    preview.innerHTML = `${titleHtml}${html}`;
+    renderCodeBlock();
+}
+
+document.addEventListener("click", function (event) {
+    if (event.target !== contextMenu && !contextMenu.contains(event.target)) {
+        contextMenu.style.display = "none";
+    }
+});
