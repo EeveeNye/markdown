@@ -57,7 +57,6 @@ marked.Renderer.prototype.heading = function (text, level) {
     const size = 28 - level * 2;
     return `<h${level} style="font-size:${size}px">${text}</h${level}>`;
 };
-
 function renderCodeBlock() {
     const codeBlocks = document.querySelectorAll('pre code');
     codeBlocks.forEach((block) => {
@@ -78,8 +77,6 @@ function renderCodeBlock() {
 
         block.parentNode.insertBefore(codeTitle, block);
 
-        // 添加行号
-        hljs.lineNumbersBlock(block);
     });
 }
 
@@ -155,20 +152,7 @@ titleInput.addEventListener('input', () => {
     saveContent();
 });
 
-// 在代码块外面包裹一层 div，方便添加行号
-function wrapCodeBlocksWithLineNumbers() {
-    const codeBlocks = document.querySelectorAll('pre code');
-    codeBlocks.forEach((block) => {
-        const lines = block.innerHTML.trim().split('\n').length;
-        const lineNumbers = Array.from({ length: lines }, (_, i) => `<span class="line-number">${i + 1}</span>`).join('');
-        const wrapper = document.createElement('div');
-        wrapper.className = 'code-block';
-        wrapper.innerHTML = `<div class="line-numbers">${lineNumbers}</div>${block.outerHTML}`;
-        block.parentNode.replaceChild(wrapper, block);
-    });
-}
 
-wrapCodeBlocksWithLineNumbers();
 
 // 添加 MutationObserver，监视 editor 元素的子节点变化
 const observer = new MutationObserver((mutationsList) => {
