@@ -86,7 +86,8 @@ function renderCodeBlock() {
 // 在 editor 的 input 事件监听器中调用 renderCodeBlock 函数
 editor.addEventListener('input', () => {
     reRenderCodeBlock();
-    handleEditorInputChange();
+    // handleEditorInputChange();
+    saveContent();
 });
 
 // 在 titleInput 的 input 事件监听器中调用 renderCodeBlock 函数
@@ -128,7 +129,7 @@ function restoreContent() {
 
     // 触发一次 input 事件，以恢复预览区域
     editor.dispatchEvent(new Event('input'));
-    editorText = getEditorText();
+    // editorText = getEditorText();
 }
 
 restoreContent();
@@ -288,7 +289,7 @@ function formatSelectedText(leftSymbol, rightSymbol) {
         range.setEnd(newNode, newNode.length);
         selection.removeAllRanges();
         selection.addRange(range);
-
+        // saveText();
         reRenderCodeBlock();
 
     }
@@ -305,7 +306,7 @@ function reRenderCodeBlock() {
     preview.innerHTML = `${titleHtml}${html}`;
     hljs.highlightAll();
     renderCodeBlock();
-    saveText();
+
 }
 
 //点击空白关闭右键菜单
@@ -377,107 +378,151 @@ function removeBackColorSpan() {
 
 //#region 撤回功能
 
-//获取编辑器中的文本内容
-function getEditorText() {
-    return editor.innerText;
-}
+// //获取编辑器中的文本内容
+// function getEditorText() {
+//     return editor.innerText;
+// }
 
-//保存文本内容
-function saveText() {
-    let newText = getEditorText();
-    let diffs = dmp.diff_main(editorText, newText);
-    dmp.diff_cleanupEfficiency(diffs);
+// //保存文本内容
+// function saveText() {
+//     let newText = getEditorText();
+//     let diffs = dmp.diff_main(editorText, newText);
+//     dmp.diff_cleanupEfficiency(diffs);
 
-    // Convert diffs to simple arrays
-    diffs = diffs.map(diff => [diff[0], diff[1]]);
+//     // Convert diffs to simple arrays
+//     diffs = diffs.map(diff => [diff[0], diff[1]]);
 
-    if (diffs.length > 1) {
-        changeHistory.push(diffs);
-        currentPosition++;
-    }
+//     if (diffs.length > 1) {
+//         changeHistory.push(diffs);
+//         currentPosition++;
+//     }
 
-    editorText = newText;
-}
-function undo() {
-    console.log('changeHistory:', changeHistory);
-    console.log('currentPosition:', currentPosition);
-    if (currentPosition >= 0) {
-        let changesToUndo = changeHistory[currentPosition];
-        if (Array.isArray(changesToUndo) && changesToUndo.every(change => Array.isArray(change) && change.length === 2)) {
-            console.log('changesToUndo:', changesToUndo);
-            let diffs = changesToUndo;
+//     editorText = newText;
+// }
+// function undo() {
+//     console.log('changeHistory:', changeHistory);
+//     console.log('currentPosition:', currentPosition);
+//     if (currentPosition >= 0) {
+//         const caretPosition = saveCaretPosition(); // 保存光标位置
+//         let changesToUndo = changeHistory[currentPosition];
+//         if (Array.isArray(changesToUndo) && changesToUndo.every(change => Array.isArray(change) && change.length === 2)) {
+//             console.log('changesToUndo:', changesToUndo);
+//             let diffs = changesToUndo;
 
-            // Reversing diffs
-            diffs.forEach((diff) => {
-                diff[0] = -diff[0];
-            });
+//             // Reversing diffs
+//             diffs.forEach((diff) => {
+//                 diff[0] = -diff[0];
+//             });
 
-            // Applying reversed diffs to the editor text
-            let patchedText = dmp.patch_apply(dmp.patch_make(diffs), editorText)[0];
-            setEditorText(patchedText);
+//             // Applying reversed diffs to the editor text
+//             let patchedText = dmp.patch_apply(dmp.patch_make(diffs), editorText)[0];
+//             setEditorText(patchedText);
+//             restoreCaretPosition(editor, caretPosition); // 恢复光标位置
 
-            currentPosition--;
-        } else {
-            console.error('Invalid history entry:', changesToUndo);
-        }
-    }
-}
-
-
-
-//重做操作
-function redo() {
-    if (currentPosition < changeHistory.length - 1) {
-        let changesToRedo = changeHistory[currentPosition + 1];
-        if (typeof changesToRedo === 'string') {
-            let diffs = JSON.parse(changesToRedo);
-            let newText = dmp.patch_apply(dmp.patch_make(diffs), editorText)[0];
-            setEditorText(newText);
-
-            currentPosition++;
-        } else {
-            console.error('Invalid history entry:', changesToRedo);
-        }
-    }
-}
-
-//设置编辑器的文本内容
-function setEditorText(newText) {
-    editorText = newText;
-    editor.innerText = newText;
-    editor.dispatchEvent(new Event('input'));
-}
-
-document.addEventListener('keydown', function (event) {
-    if (event.ctrlKey || event.metaKey) {
-        if (event.key === 'z') {
-            event.preventDefault();
-            undo();
-        } else if (event.key === 'y' || event.key === 'Z') {
-            event.preventDefault();
-            redo();
-        }
-    }
-});
-
-editor.addEventListener('input', handleEditorInputChange);
+//             currentPosition--;
+//         } else {
+//             console.error('Invalid history entry:', changesToUndo);
+//         }
+//     }
+// }
 
 
-function handleEditorInputChange() {
-    if (!isComposing) {
-        saveText();
-    }
-}
+// //重做操作
+// function redo() {
+//     if (currentPosition < changeHistory.length - 1) {
+//         let changesToRedo = changeHistory[currentPosition + 1];
+//         if (typeof changesToRedo === 'string') {
+//             let diffs = JSON.parse(changesToRedo);
+//             let newText = dmp.patch_apply(dmp.patch_make(diffs), editorText)[0];
+//             setEditorText(newText);
+
+//             currentPosition++;
+//         } else {
+//             console.error('Invalid history entry:', changesToRedo);
+//         }
+//     }
+// }
+
+// //设置编辑器的文本内容
+// function setEditorText(newText) {
+//     editorText = newText;
+//     editor.innerText = newText;
+//     editor.dispatchEvent(new Event('input'));
+// }
+
+// document.addEventListener('keydown', function (event) {
+//     if ((event.ctrlKey || event.metaKey) && !isComposing) {
+//         if (event.key === 'z') {
+//             event.preventDefault();
+//             undo();
+//         } else if (event.key === 'y' || event.key === 'Z') {
+//             event.preventDefault();
+//             redo();
+//         }
+//     }
+// });
+
+// editor.addEventListener('compositionend', () => {
+//     isComposing = false;
+//     handleEditorInputChange();
+//     saveText(); // 在输入完成时保存文本状态
+// });
+
+
+// function handleEditorInputChange() {
+//     if (!isComposing) {
+
+//     } else {
+//         // 当处于输入法组合输入状态时，禁用撤销和重做功能
+//         event.preventDefault();
+//     }
+// }
 
 
 
-editor.addEventListener('compositionstart', () => {
-    isComposing = true;
-});
+// editor.addEventListener('compositionstart', () => {
+//     isComposing = true;
+// });
 
-editor.addEventListener('compositionend', () => {
-    isComposing = false;
-    handleEditorInputChange();
-});
+// editor.addEventListener('compositionend', () => {
+//     isComposing = false;
+//     handleEditorInputChange();
+// });
+
+// //保存当前光标位置
+// function saveCaretPosition() {
+//     const selection = window.getSelection();
+//     const range = selection.getRangeAt(0);
+//     const caretPosition = {
+//         start: range.startOffset,
+//         end: range.endOffset
+//     };
+//     return caretPosition;
+// }
+// //恢复光标位置
+// function restoreCaretPosition(containerNode, position) {
+//     let nodeStack = [containerNode], node, foundStart = false, stop = false;
+//     const selection = window.getSelection();
+
+//     while (!stop && (node = nodeStack.pop())) {
+//         if (node.nodeType === 3) { // Node.TEXT_NODE
+//             const nextPos = position.start - node.length;
+//             if (!foundStart && position.start <= node.length) {
+//                 const range = document.createRange();
+//                 range.setStart(node, position.start);
+//                 selection.removeAllRanges();
+//                 selection.addRange(range);
+//                 foundStart = true;
+//             }
+//             position.start = nextPos;
+//         } else {
+//             let i = node.childNodes.length;
+//             while (i--) {
+//                 nodeStack.push(node.childNodes[i]);
+//             }
+//         }
+//     }
+// }
+
 
 //#endregion
