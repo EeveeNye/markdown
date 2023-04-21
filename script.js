@@ -6,6 +6,10 @@ const fileInput = document.createElement('input');
 fileInput.type = 'file';
 
 var selection, range, selectedText;
+const dmp = new diff_match_patch();
+let editorText = ''; // 当前编辑器中的文本
+let changeHistory = []; // 保存文本更改的历史记录
+let currentPosition = -1; // 当前的历史记录位置
 
 // 自动调整编辑器和预览窗口的高度，以适应不同屏幕尺寸
 function adjustHeight() {
@@ -121,6 +125,7 @@ function restoreContent() {
 
     // 触发一次 input 事件，以恢复预览区域
     editor.dispatchEvent(new Event('input'));
+    editorText = getEditorText();
 }
 
 restoreContent();
@@ -282,6 +287,7 @@ function formatSelectedText(leftSymbol, rightSymbol) {
         selection.addRange(range);
 
         reRenderCodeBlock();
+        saveText();
     }
     contextMenu.style.display = "none";
 
@@ -363,3 +369,72 @@ function removeBackColorSpan() {
     }
     contextMenu.style.display = "none";
 }
+
+
+//#region 撤回功能
+
+
+
+function getEditorText() {
+    return editor.textContent;
+}
+
+
+function saveText() {
+
+    // 计算新的文本和旧的文本之间的差异
+    let diffs = dmp.diff_main(editorText, getEditorText());
+    dmp.diff_cleanupEfficiency(diffs);
+    console.log('oldText:', editorText);
+    console.log('newText:', getEditorText());
+    // 将差异保存到历史记录中
+    if (diffs.length > 1) {
+        changeHistory.push(JSON.stringify(diffs));
+        currentPosition++;
+    }
+}
+function undo() {
+    if (currentPosition >= 0) {
+        let changesToUndo = changeHistory[currentPosition];
+        if (typeof changesToUndo === 'string') {
+            let diffs = JSON.parse(changesToUndo);
+            let reversedChanges = dmp.diff_main(diffs, []);
+
+            dmp.diff_cleanupEfficiency(reversedChanges);
+            let reversedText = dmp.patch_apply(dmp.patch_make(reversedChanges), editorText)[0];
+            setEditorText(reversedText);
+
+            currentPosition--;
+        } else {
+            console.error('Invalid history entry:', changesToUndo);
+        }
+    }
+}
+
+function redo() {
+    if (currentPosition < changeHistory.length - 1) {
+        currentPosition++;
+        let changesToRedo = changeHistory[currentPosition];
+
+        if (typeof changesToRedo === 'string') {
+            let diffs = JSON.parse(changesToRedo);
+            let newText = dmp.patch_apply(dmp.patch_make(diffs), editorText)[0];
+            setEditorText(newText);
+        } else {
+            console.error('Invalid history entry:', changesToRedo);
+        }
+    }
+}
+document.addEventListener('keydown', function (event) {
+    if (event.ctrlKey || event.metaKey) {
+        if (event.key === 'z') {
+            event.preventDefault();
+            undo();
+        } else if (event.key === 'y' || event.key === 'Z') {
+            event.preventDefault();
+            redo();
+        }
+    }
+});
+
+//#endregion
