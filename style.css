@@ -253,27 +253,145 @@ th {
     border: 1px solid #ccc;
 }
 
+
+
 #context-menu {
     position: absolute;
     z-index: 999;
     background-color: #fff;
     border: 1px solid #ccc;
-    padding: 4px 0;
+    padding: 8px;
+
     font-size: 14px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     max-width: 300px;
 }
 
 .context-menu-item {
-    padding: 4px 12px;
+    padding: 6px 8px;
     cursor: pointer;
     display: block;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    background-color: #ffffff;
+    color: #000000;
 }
 
 .context-menu-item:hover {
     background-color: #f6f6f6;
     color: #333;
+}
+
+.text-color-buttons {
+    display: flex;
+    padding: 6px 8px;
+}
+
+.text-color-buttons:hover {
+    background-color: #ffffff;
+}
+
+.text-color-button {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    margin-right: 5px;
+    display: flex;
+    /* 添加flex布局 */
+    justify-content: center;
+    /* 水平居中文本 */
+    align-items: center;
+    /* 垂直居中文本 */
+    font-size: 12px;
+    /* 设置字体大小 */
+    color: #ffffff;
+    /* 设置字体颜色 */
+    text-decoration: none;
+    /* 去除下划线 */
+}
+
+/* 添加鼠标悬停时的边框样式 */
+.text-color-button:hover {
+    border-color: #333;
+    transform: scale(1.2);
+}
+
+.red {
+    background-color: red;
+}
+
+.orange {
+    background-color: orange;
+}
+
+.yellow {
+    background-color: yellow;
+}
+
+.green {
+    background-color: green;
+}
+
+.cyan {
+    background-color: cyan;
+}
+
+.blue {
+    background-color: blue;
+}
+
+.purple {
+    background-color: purple;
+}
+
+.black {
+    background-color: black;
+}
+
+.white {
+    background-color: rgb(237, 237, 237);
+}
+
+.back-color-buttons {
+    display: flex;
+    padding: 6px 8px;
+}
+
+.back-color-buttons:hover {
+    background-color: #ffffff;
+}
+
+.back-color-button {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    margin-right: 5px;
+    display: flex;
+    /* 添加flex布局 */
+    justify-content: center;
+    /* 水平居中文本 */
+    align-items: center;
+    /* 垂直居中文本 */
+    font-size: 12px;
+    /* 设置字体大小 */
+    color: #ffffff;
+    /* 设置字体颜色 */
+    text-decoration: none;
+    /* 去除下划线 */
+}
+
+/* 添加鼠标悬停时的边框样式 */
+.back-color-button:hover {
+    border-color: #333;
+    transform: scale(1.2);
+}
+
+.context-menu-separator {
+    border-top: 1px solid #ccc;
+    margin: 5px 0;
 }

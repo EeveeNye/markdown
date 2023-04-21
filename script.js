@@ -4,6 +4,9 @@ const titleInput = document.getElementById('title-input');
 const insertImageBtn = document.getElementById('insert-image-btn');
 const fileInput = document.createElement('input');
 fileInput.type = 'file';
+
+var selection, range, selectedText;
+
 editor.addEventListener('input', () => {
     const markdown = editor.innerText;
 
@@ -216,32 +219,7 @@ document.addEventListener('scroll', function (event) {
     }
 }, true);
 
-function setBold() {
-    // 获取选中文本的范围
-    const selection = window.getSelection();
-    const range = selection.getRangeAt(0);
-    // 创建一个加粗的 span 元素
-    const bold = document.createElement('span');
-    bold.style.fontWeight = 'bold';
-    // 将选中文本包裹在加粗的 span 元素中
-    range.surroundContents(bold);
-    // 清除选中文本的范围
-    selection.removeAllRanges();
-}
 
-function showContextMenu(event) {
-    // 阻止默认的右键菜单
-    event.preventDefault();
-    // 创建右键菜单
-    const menu = document.createElement('div');
-    menu.className = 'context-menu';
-    menu.innerHTML = '<div onclick="setBold()">加粗</div>';
-    // 将菜单添加到页面中
-    document.body.appendChild(menu);
-    // 设置菜单的位置
-    menu.style.top = event.clientY + 'px';
-    menu.style.left = event.clientX + 'px';
-}
 const contextMenu = document.getElementById('context-menu');
 
 editor.addEventListener('contextmenu', (event) => {
@@ -279,7 +257,30 @@ document.getElementById('underline').addEventListener('click', () => {
 document.getElementById('strikethrough').addEventListener('click', () => {
     formatSelectedText('~~', '~~');
 });
-var selection, range, selectedText;
+
+// 复制
+document.getElementById('copy').addEventListener('click', () => {
+    if (currentSelection && currentSelection.toString().length > 0) {
+        let selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(currentSelection);
+        document.execCommand('copy');
+    }
+});
+
+// 剪切
+document.getElementById('cut').addEventListener('click', () => {
+    if (currentSelection && currentSelection.toString().length > 0) {
+        let selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(currentSelection);
+        document.execCommand('cut');
+    }
+});
+
+//保存临时选取用于复制和剪切
+let currentSelection = null;
+
 editor.addEventListener("mouseup", function () {
     selection = window.getSelection();
     if (selection.toString().length > 0) {
@@ -287,7 +288,12 @@ editor.addEventListener("mouseup", function () {
         selectedText = range.toString();
         console.log(selectedText);
     }
+    if (window.getSelection) {
+        currentSelection = window.getSelection().getRangeAt(0).cloneRange();
+    }
 });
+
+//为文字添加头尾
 function formatSelectedText(leftSymbol, rightSymbol) {
     if (selectedText.length > 0) {
         const formattedText = `${leftSymbol}${selectedText}${rightSymbol}`;
@@ -305,6 +311,7 @@ function formatSelectedText(leftSymbol, rightSymbol) {
 
 }
 
+//重新渲染
 function reRenderCodeBlock() {
     const markdown = editor.innerText;
     const html = marked(markdown);
@@ -314,8 +321,68 @@ function reRenderCodeBlock() {
     renderCodeBlock();
 }
 
+//点击空白关闭右键菜单
 document.addEventListener("click", function (event) {
     if (event.target !== contextMenu && !contextMenu.contains(event.target)) {
         contextMenu.style.display = "none";
     }
 });
+
+// 在这里处理颜色（字体）按钮点击事件
+document.querySelectorAll('.text-color-button').forEach((button) => {
+    button.addEventListener('click', (event) => {
+        const color = event.target.classList[1];
+        if (color === 'black') {
+            removeColorSpan();
+        } else
+            formatSelectedText(`<span style="color: ${color};">`, "</span>");
+    });
+});
+
+// 在这里处理颜色（背景）按钮点击事件
+document.querySelectorAll('.back-color-button').forEach((button) => {
+    button.addEventListener('click', (event) => {
+        const color = event.target.classList[1];
+
+        if (color === 'white') {
+            removeColorSpan();
+        } else
+            formatSelectedText(`<mark style="background-color: ${color};">`, "</mark>");
+    });
+});
+
+//点黑色字体按钮去除字体颜色
+function removeColorSpan() {
+    if (selectedText.length > 0) {
+        const regex = /<span style="color: (.*?);">(.*?)<\/span>/g;
+        const formattedText = selectedText.replace(regex, '$2');
+        var newNode = document.createTextNode(formattedText);
+        range.deleteContents();
+        range.insertNode(newNode);
+        range.setStart(newNode, 0);
+        range.setEnd(newNode, newNode.length);
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        reRenderCodeBlock();
+    }
+    contextMenu.style.display = "none";
+}
+
+//点白色按钮去除背景
+function removeBackColorSpan() {
+    if (selectedText.length > 0) {
+        const regex = /<mark style="background-color: (.*?);">(.*?)<\/mark>/g;
+        const formattedText = selectedText.replace(regex, '$2');
+        var newNode = document.createTextNode(formattedText);
+        range.deleteContents();
+        range.insertNode(newNode);
+        range.setStart(newNode, 0);
+        range.setEnd(newNode, newNode.length);
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        reRenderCodeBlock();
+    }
+    contextMenu.style.display = "none";
+}
