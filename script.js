@@ -7,24 +7,6 @@ fileInput.type = 'file';
 
 var selection, range, selectedText;
 
-editor.addEventListener('input', () => {
-    const markdown = editor.innerText;
-
-    const html = marked(markdown);
-    const title = titleInput.value;
-    const titleHtml = title ? `<h1>${title}</h1>` : '';
-    preview.innerHTML = `${titleHtml}${html}`;
-    hljs.highlightAll();
-});
-titleInput.addEventListener('input', () => {
-    const title = titleInput.value;
-    const titleHtml = title ? `<h1>${title}</h1>` : '';
-    const markdown = editor.innerHTML;
-
-    const html = marked(markdown);
-    preview.innerHTML = `${titleHtml}${html}`;
-});
-
 // 自动调整编辑器和预览窗口的高度，以适应不同屏幕尺寸
 function adjustHeight() {
     const containerHeight = window.innerHeight - 112; // 减去标题栏和工具栏的高度
@@ -56,7 +38,6 @@ marked.setOptions({
     renderer: new marked.Renderer(),
     // 块级引用语法的计数器，用于决定是否需要在前面添加空行
     blockquoteCount: 0
-
 });
 
 // 处理#语法，控制标题大小
@@ -98,17 +79,19 @@ function renderCodeBlock() {
 // 在 editor 的 input 事件监听器中调用 renderCodeBlock 函数
 editor.addEventListener('input', () => {
     reRenderCodeBlock();
+    saveContent();
 });
 
 // 在 titleInput 的 input 事件监听器中调用 renderCodeBlock 函数
 titleInput.addEventListener('input', () => {
     reRenderCodeBlock();
+    saveContent();
 });
 
 document.addEventListener('click', (event) => {
     if (event.target.classList.contains('copy-code-btn')) {
         const copyButton = event.target;
-        const code = copyButton.parentElement.nextElementSibling.innerText; // 修改这里
+        const code = copyButton.parentElement.nextElementSibling.innerText;
         const textarea = document.createElement('textarea');
         textarea.value = code;
         document.body.appendChild(textarea);
@@ -148,16 +131,6 @@ function saveContent() {
     localStorage.setItem('markdown-content', editor.innerText);
 }
 
-// 在 input 事件中调用 saveContent 函数
-editor.addEventListener('input', () => {
-    saveContent();
-});
-
-titleInput.addEventListener('input', () => {
-    saveContent();
-});
-
-
 
 // 添加 MutationObserver，监视 editor 元素的子节点变化
 const observer = new MutationObserver((mutationsList) => {
@@ -178,7 +151,7 @@ const observer = new MutationObserver((mutationsList) => {
 });
 
 observer.observe(editor, { childList: true, subtree: true });
-
+//同步滑动
 function syncScroll(from, to) {
     if (syncInProgress) {
         return;
@@ -318,6 +291,7 @@ function reRenderCodeBlock() {
     const title = titleInput.value;
     const titleHtml = title ? `<h1>${title}</h1>` : '';
     preview.innerHTML = `${titleHtml}${html}`;
+    hljs.highlightAll();
     renderCodeBlock();
 }
 
