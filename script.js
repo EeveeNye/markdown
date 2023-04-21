@@ -154,3 +154,38 @@ editor.addEventListener('input', () => {
 titleInput.addEventListener('input', () => {
     saveContent();
 });
+
+// 在代码块外面包裹一层 div，方便添加行号
+function wrapCodeBlocksWithLineNumbers() {
+    const codeBlocks = document.querySelectorAll('pre code');
+    codeBlocks.forEach((block) => {
+        const lines = block.innerHTML.trim().split('\n').length;
+        const lineNumbers = Array.from({ length: lines }, (_, i) => `<span class="line-number">${i + 1}</span>`).join('');
+        const wrapper = document.createElement('div');
+        wrapper.className = 'code-block';
+        wrapper.innerHTML = `<div class="line-numbers">${lineNumbers}</div>${block.outerHTML}`;
+        block.parentNode.replaceChild(wrapper, block);
+    });
+}
+
+wrapCodeBlocksWithLineNumbers();
+
+// 添加 MutationObserver，监视 editor 元素的子节点变化
+const observer = new MutationObserver((mutationsList) => {
+    for (const mutation of mutationsList) {
+        if (mutation.type === 'childList') {
+            const addedNodes = Array.from(mutation.addedNodes);
+            const codeBlocks = addedNodes.filter(node => node.tagName === 'CODE');
+            codeBlocks.forEach((block) => {
+                const lines = block.innerHTML.trim().split('\n').length;
+                const lineNumbers = Array.from({ length: lines }, (_, i) => `<span class="line-number">${i + 1}</span>`).join('');
+                const wrapper = document.createElement('div');
+                wrapper.className = 'code-block';
+                wrapper.innerHTML = `<div class="line-numbers">${lineNumbers}</div>${block.outerHTML}`;
+                block.parentNode.replaceChild(wrapper, block);
+            });
+        }
+    }
+});
+
+observer.observe(editor, { childList: true, subtree: true });
