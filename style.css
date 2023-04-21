@@ -232,3 +232,23 @@ img {
     display: block;
     margin: 0 auto;
 }
+
+blockquote {
+    background-color: #f8f8f8;
+    border-left: 4px solid #ccc;
+    margin: 0;
+    padding: 0.5em 1em;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #ccc;
+    margin-bottom: 1em;
+}
+
+td,
+th {
+    padding: 0.5em;
+    border: 1px solid #ccc;
+}

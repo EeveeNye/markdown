@@ -6,6 +6,7 @@ const fileInput = document.createElement('input');
 fileInput.type = 'file';
 editor.addEventListener('input', () => {
     const markdown = editor.innerText;
+
     const html = marked(markdown);
     const title = titleInput.value;
     const titleHtml = title ? `<h1>${title}</h1>` : '';
@@ -16,6 +17,7 @@ titleInput.addEventListener('input', () => {
     const title = titleInput.value;
     const titleHtml = title ? `<h1>${title}</h1>` : '';
     const markdown = editor.innerHTML;
+
     const html = marked(markdown);
     preview.innerHTML = `${titleHtml}${html}`;
 });
