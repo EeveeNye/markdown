@@ -11,6 +11,9 @@ let editorText = ''; // 当前编辑器中的文本
 let changeHistory = []; // 保存文本更改的历史记录
 let currentPosition = -1; // 当前的历史记录位置
 
+let inputTimeout = null;
+let isComposing = false;
+
 // 自动调整编辑器和预览窗口的高度，以适应不同屏幕尺寸
 function adjustHeight() {
     const containerHeight = window.innerHeight - 112; // 减去标题栏和工具栏的高度
@@ -83,7 +86,7 @@ function renderCodeBlock() {
 // 在 editor 的 input 事件监听器中调用 renderCodeBlock 函数
 editor.addEventListener('input', () => {
     reRenderCodeBlock();
-    saveContent();
+    handleEditorInputChange();
 });
 
 // 在 titleInput 的 input 事件监听器中调用 renderCodeBlock 函数
@@ -287,7 +290,7 @@ function formatSelectedText(leftSymbol, rightSymbol) {
         selection.addRange(range);
 
         reRenderCodeBlock();
-        saveText();
+
     }
     contextMenu.style.display = "none";
 
@@ -302,6 +305,7 @@ function reRenderCodeBlock() {
     preview.innerHTML = `${titleHtml}${html}`;
     hljs.highlightAll();
     renderCodeBlock();
+    saveText();
 }
 
 //点击空白关闭右键菜单
@@ -373,36 +377,44 @@ function removeBackColorSpan() {
 
 //#region 撤回功能
 
-
-
+//获取编辑器中的文本内容
 function getEditorText() {
-    return editor.textContent;
+    return editor.innerText;
 }
 
-
+//保存文本内容
 function saveText() {
-
-    // 计算新的文本和旧的文本之间的差异
-    let diffs = dmp.diff_main(editorText, getEditorText());
+    let newText = getEditorText();
+    let diffs = dmp.diff_main(editorText, newText);
     dmp.diff_cleanupEfficiency(diffs);
-    console.log('oldText:', editorText);
-    console.log('newText:', getEditorText());
-    // 将差异保存到历史记录中
+
+    // Convert diffs to simple arrays
+    diffs = diffs.map(diff => [diff[0], diff[1]]);
+
     if (diffs.length > 1) {
-        changeHistory.push(JSON.stringify(diffs));
+        changeHistory.push(diffs);
         currentPosition++;
     }
+
+    editorText = newText;
 }
 function undo() {
+    console.log('changeHistory:', changeHistory);
+    console.log('currentPosition:', currentPosition);
     if (currentPosition >= 0) {
         let changesToUndo = changeHistory[currentPosition];
-        if (typeof changesToUndo === 'string') {
-            let diffs = JSON.parse(changesToUndo);
-            let reversedChanges = dmp.diff_main(diffs, []);
+        if (Array.isArray(changesToUndo) && changesToUndo.every(change => Array.isArray(change) && change.length === 2)) {
+            console.log('changesToUndo:', changesToUndo);
+            let diffs = changesToUndo;
 
-            dmp.diff_cleanupEfficiency(reversedChanges);
-            let reversedText = dmp.patch_apply(dmp.patch_make(reversedChanges), editorText)[0];
-            setEditorText(reversedText);
+            // Reversing diffs
+            diffs.forEach((diff) => {
+                diff[0] = -diff[0];
+            });
+
+            // Applying reversed diffs to the editor text
+            let patchedText = dmp.patch_apply(dmp.patch_make(diffs), editorText)[0];
+            setEditorText(patchedText);
 
             currentPosition--;
         } else {
@@ -411,20 +423,31 @@ function undo() {
     }
 }
 
+
+
+//重做操作
 function redo() {
     if (currentPosition < changeHistory.length - 1) {
-        currentPosition++;
-        let changesToRedo = changeHistory[currentPosition];
-
+        let changesToRedo = changeHistory[currentPosition + 1];
         if (typeof changesToRedo === 'string') {
             let diffs = JSON.parse(changesToRedo);
             let newText = dmp.patch_apply(dmp.patch_make(diffs), editorText)[0];
             setEditorText(newText);
+
+            currentPosition++;
         } else {
             console.error('Invalid history entry:', changesToRedo);
         }
     }
 }
+
+//设置编辑器的文本内容
+function setEditorText(newText) {
+    editorText = newText;
+    editor.innerText = newText;
+    editor.dispatchEvent(new Event('input'));
+}
+
 document.addEventListener('keydown', function (event) {
     if (event.ctrlKey || event.metaKey) {
         if (event.key === 'z') {
@@ -435,6 +458,26 @@ document.addEventListener('keydown', function (event) {
             redo();
         }
     }
+});
+
+editor.addEventListener('input', handleEditorInputChange);
+
+
+function handleEditorInputChange() {
+    if (!isComposing) {
+        saveText();
+    }
+}
+
+
+
+editor.addEventListener('compositionstart', () => {
+    isComposing = true;
+});
+
+editor.addEventListener('compositionend', () => {
+    isComposing = false;
+    handleEditorInputChange();
 });
 
 //#endregion
