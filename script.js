@@ -77,6 +77,9 @@ function renderCodeBlock() {
         codeTitle.appendChild(copyButton);
 
         block.parentNode.insertBefore(codeTitle, block);
+
+        // 添加行号
+        hljs.lineNumbersBlock(block);
     });
 }
 
