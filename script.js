@@ -195,5 +195,18 @@ function syncScroll(from, to) {
     to.scrollTop = scrollPercentage * (to.scrollHeight - to.clientHeight);
 }
 
-editor.addEventListener('scroll', () => syncScroll(editor, preview));
-preview.addEventListener('scroll', () => syncScroll(preview, editor));
+function preventDefaultScroll(event) {
+    if (!event.defaultPrevented) {
+        event.preventDefault();
+    }
+}
+
+editor.addEventListener('scroll', (event) => {
+    preventDefaultScroll(event);
+    syncScroll(editor, preview);
+});
+
+preview.addEventListener('scroll', (event) => {
+    preventDefaultScroll(event);
+    syncScroll(preview, editor);
+});
