@@ -176,6 +176,7 @@ pre {
     position: relative;
     border-radius: 3px;
     margin-bottom: 20px;
+
 }
 
 pre::before {
@@ -209,6 +210,10 @@ pre code {
     color: #ffffff;
     overflow-x: auto;
     position: relative;
+}
+
+pre code::-webkit-scrollbar {
+    height: 6px;
 }
 
 .copy-code-btn {
