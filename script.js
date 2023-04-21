@@ -48,7 +48,9 @@ marked.setOptions({
     highlight: function (code) {
         return hljs.highlightAuto(code).value;
     },
-    renderer: new marked.Renderer()
+    renderer: new marked.Renderer(),
+    // 块级引用语法的计数器，用于决定是否需要在前面添加空行
+    blockquoteCount: 0
 
 });
 
@@ -57,6 +59,14 @@ marked.Renderer.prototype.heading = function (text, level) {
     const size = 28 - level * 2;
     return `<h${level} style="font-size:${size}px">${text}</h${level}>`;
 };
+
+// 处理块级引用语法
+marked.Renderer.prototype.blockquote = function (quote) {
+    const count = marked.options.blockquoteCount;
+    marked.options.blockquoteCount++;
+    return `\n\n${count > 0 ? '\n' : ''}<blockquote>${quote.trim()}</blockquote>\n\n`;
+};
+
 function renderCodeBlock() {
     const codeBlocks = document.querySelectorAll('pre code');
     codeBlocks.forEach((block) => {
