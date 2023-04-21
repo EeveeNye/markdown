@@ -189,3 +189,11 @@ const observer = new MutationObserver((mutationsList) => {
 });
 
 observer.observe(editor, { childList: true, subtree: true });
+
+function syncScroll(from, to) {
+    const scrollPercentage = from.scrollTop / (from.scrollHeight - from.clientHeight);
+    to.scrollTop = scrollPercentage * (to.scrollHeight - to.clientHeight);
+}
+
+editor.addEventListener('scroll', () => syncScroll(editor, preview));
+preview.addEventListener('scroll', () => syncScroll(preview, editor));
