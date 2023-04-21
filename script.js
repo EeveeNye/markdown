@@ -209,7 +209,10 @@ document.addEventListener('click', (event) => {
     }
 });
 
-
+// 代码段
+document.getElementById('code').addEventListener('click', () => {
+    formatSelectedText('\n```\n', '\n```\n');
+});
 
 // 加粗
 document.getElementById('bold').addEventListener('click', () => {
