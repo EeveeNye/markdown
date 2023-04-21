@@ -195,18 +195,11 @@ function syncScroll(from, to) {
     to.scrollTop = scrollPercentage * (to.scrollHeight - to.clientHeight);
 }
 
-function preventDefaultScroll(event) {
-    if (!event.defaultPrevented) {
+editor.addEventListener('scroll', () => syncScroll(editor, preview));
+preview.addEventListener('scroll', () => syncScroll(preview, editor));
+document.addEventListener('scroll', function (event) {
+    const target = event.target;
+    if (target.closest('#editor') || target.closest('#preview')) {
         event.preventDefault();
     }
-}
-
-editor.addEventListener('scroll', (event) => {
-    preventDefaultScroll(event);
-    syncScroll(editor, preview);
-});
-
-preview.addEventListener('scroll', (event) => {
-    preventDefaultScroll(event);
-    syncScroll(preview, editor);
-});
+}, true);
