@@ -225,3 +225,86 @@ document.addEventListener('scroll', function (event) {
         event.preventDefault();
     }
 }, true);
+
+function setBold() {
+    // 获取选中文本的范围
+    const selection = window.getSelection();
+    const range = selection.getRangeAt(0);
+    // 创建一个加粗的 span 元素
+    const bold = document.createElement('span');
+    bold.style.fontWeight = 'bold';
+    // 将选中文本包裹在加粗的 span 元素中
+    range.surroundContents(bold);
+    // 清除选中文本的范围
+    selection.removeAllRanges();
+}
+
+function showContextMenu(event) {
+    // 阻止默认的右键菜单
+    event.preventDefault();
+    // 创建右键菜单
+    const menu = document.createElement('div');
+    menu.className = 'context-menu';
+    menu.innerHTML = '<div onclick="setBold()">加粗</div>';
+    // 将菜单添加到页面中
+    document.body.appendChild(menu);
+    // 设置菜单的位置
+    menu.style.top = event.clientY + 'px';
+    menu.style.left = event.clientX + 'px';
+}
+const contextMenu = document.getElementById('context-menu');
+const boldMenuItem = document.getElementById('bold');
+editor.addEventListener('contextmenu', (event) => {
+    event.preventDefault();
+
+    const selection = window.getSelection();
+    const node = selection.focusNode;
+
+    if (node.nodeType === Node.TEXT_NODE) {
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+
+        contextMenu.style.display = 'block';
+        contextMenu.style.left = `${rect.x}px`;
+        contextMenu.style.top = `${rect.y}px`;
+    }
+});
+
+boldMenuItem.addEventListener('click', () => {
+    document.execCommand('bold', false, null);
+    contextMenu.style.display = 'none';
+});
+
+// 加粗
+document.getElementById('bold').addEventListener('click', () => {
+    document.execCommand('bold', false, null);
+    formatSelectedText('**', '**');
+});
+
+// 斜体
+document.getElementById('italic').addEventListener('click', () => {
+    document.execCommand('italic', false, null);
+    formatSelectedText('_', '_');
+});
+
+// 下划线
+document.getElementById('underline').addEventListener('click', () => {
+    document.execCommand('underline', false, null);
+    formatSelectedText('<u>', '</u>');
+});
+
+// // 删除线
+// document.getElementById('strikethrough').addEventListener('click', () => {
+//     document.execCommand('strikethrough', false, null);
+//     formatSelectedText('~~', '~~');
+// });
+
+function formatSelectedText(leftSymbol, rightSymbol) {
+    const editor = document.getElementById('editor');
+    const selection = window.getSelection();
+    const start = selection.anchorOffset;
+    const end = selection.focusOffset;
+    const text = editor.textContent.substring(start, end);
+    const formattedText = `${leftSymbol}${text}${rightSymbol}`;
+    document.execCommand('insertHTML', false, formattedText);
+}
