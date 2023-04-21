@@ -191,12 +191,38 @@ const observer = new MutationObserver((mutationsList) => {
 observer.observe(editor, { childList: true, subtree: true });
 
 function syncScroll(from, to) {
-    const scrollPercentage = from.scrollTop / (from.scrollHeight - from.clientHeight);
-    to.scrollTop = scrollPercentage * (to.scrollHeight - to.clientHeight);
+    if (syncInProgress) {
+        return;
+    }
+    syncInProgress = true;
+
+    const fromRatio = from.scrollTop / (from.scrollHeight - from.clientHeight);
+    const toScrollTop = fromRatio * (to.scrollHeight - to.clientHeight);
+
+    if (Math.abs(to.scrollTop - toScrollTop) > 1) {
+        to.scrollTop = toScrollTop;
+    }
+    syncInProgress = false;
 }
 
-editor.addEventListener('scroll', () => syncScroll(editor, preview));
-preview.addEventListener('scroll', () => syncScroll(preview, editor));
+let syncInProgress = false;
+
+editor.addEventListener('scroll', () => {
+    if (!syncInProgress) {
+        requestAnimationFrame(() => {
+            syncScroll(editor, preview);
+        });
+    }
+});
+
+preview.addEventListener('scroll', () => {
+    if (!syncInProgress) {
+        requestAnimationFrame(() => {
+            syncScroll(preview, editor);
+        });
+    }
+});
+
 document.addEventListener('scroll', function (event) {
     const target = event.target;
     if (target.closest('#editor') || target.closest('#preview')) {
