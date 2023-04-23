@@ -1,3 +1,5 @@
+import { Command, CommandManager } from './command.js';
+
 const editor = document.getElementById('editor');
 const preview = document.getElementById('preview');
 const titleInput = document.getElementById('title-input');
@@ -6,12 +8,7 @@ const fileInput = document.createElement('input');
 fileInput.type = 'file';
 
 var selection, range, selectedText;
-let editorText = ''; // 当前编辑器中的文本
-let changeHistory = []; // 保存文本更改的历史记录
-let currentPosition = -1; // 当前的历史记录位置
-
-let inputTimeout = null;
-let isComposing = false;
+let commandManager = new CommandManager();
 
 // 自动调整编辑器和预览窗口的高度，以适应不同屏幕尺寸
 function adjustHeight() {
@@ -277,24 +274,24 @@ editor.addEventListener("mouseup", function () {
     }
 });
 
-//为文字添加头尾
-function formatSelectedText(leftSymbol, rightSymbol) {
-    if (selectedText.length > 0) {
-        const formattedText = `${leftSymbol}${selectedText}${rightSymbol}`;
-        var newNode = document.createTextNode(formattedText);
-        range.deleteContents();
-        range.insertNode(newNode);
-        range.setStart(newNode, 0);
-        range.setEnd(newNode, newNode.length);
-        selection.removeAllRanges();
-        selection.addRange(range);
-        // saveText();
-        reRenderCodeBlock();
+// //为文字添加头尾
+// function formatSelectedText(leftSymbol, rightSymbol) {
+//     if (selectedText.length > 0) {
+//         const formattedText = `${leftSymbol}${selectedText}${rightSymbol}`;
+//         var newNode = document.createTextNode(formattedText);
+//         range.deleteContents();
+//         range.insertNode(newNode);
+//         range.setStart(newNode, 0);
+//         range.setEnd(newNode, newNode.length);
+//         selection.removeAllRanges();
+//         selection.addRange(range);
+//         // saveText();
+//         reRenderCodeBlock();
 
-    }
-    contextMenu.style.display = "none";
+//     }
+//     contextMenu.style.display = "none";
 
-}
+// }
 
 //重新渲染
 function reRenderCodeBlock() {
@@ -332,13 +329,13 @@ document.querySelectorAll('.back-color-button').forEach((button) => {
         const color = event.target.classList[1];
 
         if (color === 'white') {
-            removeColorSpan();
+            removeBackColorSpan();
         } else
             formatSelectedText(`<mark style="background-color: ${color};">`, "</mark>");
     });
 });
 
-//点黑色字体按钮去除字体颜色
+// 点黑色字体按钮去除字体颜色
 function removeColorSpan() {
     if (selectedText.length > 0) {
         const regex = /<span style="color: (.*?);">(.*?)<\/span>/g;
@@ -356,7 +353,7 @@ function removeColorSpan() {
     contextMenu.style.display = "none";
 }
 
-//点白色按钮去除背景
+// 点白色按钮去除背景
 function removeBackColorSpan() {
     if (selectedText.length > 0) {
         const regex = /<mark style="background-color: (.*?);">(.*?)<\/mark>/g;
@@ -368,9 +365,123 @@ function removeBackColorSpan() {
         range.setEnd(newNode, newNode.length);
         selection.removeAllRanges();
         selection.addRange(range);
-
         reRenderCodeBlock();
     }
     contextMenu.style.display = "none";
 }
 
+// 添加事件监听器，当点击背景颜色为白色时，删除背景颜色
+document.getElementById('back-color-white').addEventListener('click', () => {
+    removeBackColorSpan();
+});
+
+// 注册撤销和重做命令
+document.getElementById('undo').addEventListener('click', () => {
+    commandManager.undo();
+});
+
+document.getElementById('redo').addEventListener('click', () => {
+    commandManager.redo();
+});
+
+// 在编辑器内容发生变化时，记录命令
+editor.addEventListener('input', () => {
+    commandManager.executeCommand(editor.innerHTML);
+});
+
+
+
+// 添加链接功能
+document.getElementById('link').addEventListener('click', () => {
+    const url = prompt('请输入链接地址:');
+    if (url) {
+        formatSelectedText(`<a href="${url}" target="_blank">`, '</a>');
+    }
+});
+
+// 添加有序列表功能
+document.getElementById('ordered-list').addEventListener('click', () => {
+    formatSelectedText('\n1. ', '\n');
+});
+
+// 添加无序列表功能
+document.getElementById('unordered-list').addEventListener('click', () => {
+    formatSelectedText('\n- ', '\n');
+});
+
+// 添加任务列表功能
+document.getElementById('task-list').addEventListener('click', () => {
+    formatSelectedText('\n- [ ] ', '\n');
+});
+
+// 添加表格功能
+document.getElementById('table').addEventListener('click', () => {
+    const tableTemplate = `\n| Header1 | Header2 |\n | ------- | ------- |\n | Cell1 | Cell2 |\n`;
+    formatSelectedText(tableTemplate, '');
+});
+
+// 添加行内代码功能
+document.getElementById('inline-code').addEventListener('click', () => {
+    formatSelectedText('', '');
+});
+
+// 添加引用功能
+document.getElementById('quote').addEventListener('click', () => {
+    formatSelectedText('\n> ', '\n');
+});
+
+// 添加水平分割线功能
+document.getElementById('horizontal-rule').addEventListener('click', () => {
+    formatSelectedText('\n---\n', '');
+});
+
+// 添加自定义字体大小功能
+document.querySelectorAll('.font-size-button').forEach((button) => {
+    button.addEventListener('click', (event) => {
+        const size = event.target.dataset.size;
+        formatSelectedText(`<span style="font-size: ${size}px;">`, '</span>');
+    });
+});
+
+// 初始化 Markdown 编辑器
+reRenderCodeBlock();
+
+// 撤销操作
+document.getElementById('undo').addEventListener('click', () => {
+    commandManager.undo();
+    reRenderCodeBlock();
+});
+
+// 重做操作
+document.getElementById('redo').addEventListener('click', () => {
+    commandManager.redo();
+    reRenderCodeBlock();
+});
+
+// 修改 formatSelectedText 函数以使用 CommandManager
+function formatSelectedText(leftSymbol, rightSymbol) {
+    if (selectedText.length > 0) {
+        const formattedText = `${leftSymbol}${selectedText}${rightSymbol}`;
+        const newNode = document.createTextNode(formattedText);
+        const command = new Command(() => {
+            range.deleteContents();
+            range.insertNode(newNode);
+            range.setStart(newNode, 0);
+            range.setEnd(newNode, newNode.length);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            reRenderCodeBlock();
+        }, () => {
+            range.deleteContents();
+            range.insertNode(document.createTextNode(selectedText));
+            range.setStart(newNode, 0);
+            range.setEnd(newNode, newNode.length);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            reRenderCodeBlock();
+        });
+
+        commandManager.executeCommand(command);
+    }
+    contextMenu.style.display = "none";
+}    
