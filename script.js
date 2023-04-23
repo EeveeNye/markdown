@@ -219,61 +219,25 @@ document.getElementById('code').addEventListener('click', () => {
     formatSelectedText('\n```\n', '\n```\n');
 });
 
-// Bold
+// 加粗
 document.getElementById('bold').addEventListener('click', () => {
-    applyFormat('bold', '<b>', '</b>');
+    formatSelectedText('**', '**');
 });
 
-// Italic
+// 斜体
 document.getElementById('italic').addEventListener('click', () => {
-    applyFormat('italic', '<i>', '</i>');
+    formatSelectedText('_', '_');
 });
 
-// Underline
+// 下划线
 document.getElementById('underline').addEventListener('click', () => {
-    applyFormat('underline', '<u>', '</u>');
+    formatSelectedText('<u>', '</u>');
 });
 
-// Strikethrough
+// 删除线
 document.getElementById('strikethrough').addEventListener('click', () => {
-    applyFormat('strikethrough', '<s>', '</s>');
+    formatSelectedText('~~', '~~');
 });
-
-function applyFormat(format, openTag, closeTag) {
-    saveSelection();
-    if (selectedText.length > 0) {
-        const regex = new RegExp(`${openTag}(.*?)${closeTag}`, 'g');
-        const isFormatted = regex.test(selectedText);
-        const formattedText = isFormatted
-            ? selectedText.replace(regex, '$1')
-            : `${openTag}${selectedText}${closeTag}`;
-        const newNode = document.createTextNode(formattedText);
-
-        const executeFunction = () => {
-            range.deleteContents();
-            range.insertNode(newNode);
-            range.setStart(newNode, 0);
-            range.setEnd(newNode, newNode.length);
-            selection.removeAllRanges();
-            selection.addRange(range);
-            reRenderCodeBlock();
-        };
-
-        const undoFunction = () => {
-            range.deleteContents();
-            range.insertNode(document.createTextNode(selectedText));
-            range.setStart(newNode, 0);
-            range.setEnd(newNode, newNode.length);
-            selection.removeAllRanges();
-            selection.addRange(range);
-            reRenderCodeBlock();
-        };
-
-        const command = new Command(executeFunction, undoFunction, null);
-        commandManager.executeCommand(command);
-    }
-}
-
 
 // 复制
 document.getElementById('copy').addEventListener('click', () => {
